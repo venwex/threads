@@ -40,20 +40,20 @@ func initRoutes(h *handler.Handler) *http.ServeMux { // default crud
 
 	mux.HandleFunc("GET /health", h.Health)
 
-	mux.HandleFunc("POST /sign-up", h.SignUp)
-	mux.HandleFunc("POST /sign-in", h.SignIn)
+	mux.HandleFunc("POST /sign-up", h.Auth.SignUp)
+	mux.HandleFunc("POST /sign-in", h.Auth.SignIn)
 
-	mux.HandleFunc("GET /users", h.ListUsers)
-	mux.HandleFunc("GET /user/{id}", h.GetUser)
-	mux.HandleFunc("POST /user", h.CreateUser)
-	mux.HandleFunc("PATCH /user/{id}", h.UpdateUser)
-	mux.HandleFunc("DELETE /user/{id}", h.DeleteUser)
+	mux.HandleFunc("GET /users", h.Users.ListUsers)
+	mux.HandleFunc("GET /user/{id}", h.Users.GetUser)
+	mux.HandleFunc("POST /user", h.Users.CreateUser)
+	mux.HandleFunc("PATCH /user/{id}", h.Users.UpdateUser)
+	mux.HandleFunc("DELETE /user/{id}", h.Users.DeleteUser)
 
-	mux.HandleFunc("GET /posts", h.ListPosts)
-	mux.HandleFunc("GET /posts/{id}", h.GetPost)
-	mux.HandleFunc("POST /posts", h.CreatePost)
-	mux.HandleFunc("PATCH /posts/{id}", h.UpdatePost)
-	mux.HandleFunc("DELETE /posts/{id}", h.DeletePost)
+	mux.HandleFunc("GET /posts", h.Posts.ListPosts)
+	mux.HandleFunc("GET /posts/{id}", h.Posts.GetPost)
+	mux.HandleFunc("POST /posts", h.Posts.CreatePost)
+	mux.HandleFunc("PATCH /posts/{id}", h.Posts.UpdatePost)
+	mux.HandleFunc("DELETE /posts/{id}", h.Posts.DeletePost)
 
 	return mux
 }

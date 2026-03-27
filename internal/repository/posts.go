@@ -8,14 +8,6 @@ import (
 	m "github.com/venwex/threads/internal/models"
 )
 
-type PostRepository interface {
-	ListsPosts() ([]m.Post, error)
-	GetPost(id int) (m.Post, error)
-	CreatePost(post m.Post) (m.Post, error)
-	UpdatePost(id int, content string) (m.Post, error)
-	DeletePost(id int) (m.Post, error)
-}
-
 type PostRepo struct {
 	db *sqlx.DB
 }

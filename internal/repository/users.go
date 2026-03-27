@@ -4,14 +4,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type UserRepository interface {
-	ListUsers()
-	GetUser()
-	CreateUser()
-	UpdateUser()
-	DeleteUser()
-}
-
 type UserRepo struct {
 	db *sqlx.DB
 }
