@@ -18,7 +18,8 @@ func NewPostHandler(svc *service.PostService) *PostHandler {
 }
 
 func (handler *PostHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
-	resp, err := handler.svc.ListPosts()
+	ctx := r.Context()
+	resp, err := handler.svc.ListPosts(ctx)
 	if err != nil {
 		log.Println("error listing posts: ", err)
 		u.RenderError(w, http.StatusNotFound, err.Error())
@@ -35,7 +36,8 @@ func (handler *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := handler.svc.GetPost(id)
+	ctx := r.Context()
+	post, err := handler.svc.GetPost(ctx, id)
 	if err != nil {
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
@@ -51,7 +53,8 @@ func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err = handler.svc.CreatePost(post)
+	ctx := r.Context()
+	post, err = handler.svc.CreatePost(ctx, post)
 	if err != nil {
 		u.RenderError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -73,7 +76,8 @@ func (handler *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err = handler.svc.UpdatePost(id, post.Content)
+	ctx := r.Context()
+	post, err = handler.svc.UpdatePost(ctx, id, post.Content)
 	if err != nil {
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
@@ -89,7 +93,8 @@ func (handler *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := handler.svc.DeletePost(id)
+	ctx := r.Context()
+	post, err := handler.svc.DeletePost(ctx, id)
 	if err != nil {
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return

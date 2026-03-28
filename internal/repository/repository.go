@@ -1,16 +1,18 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/jmoiron/sqlx"
 	m "github.com/venwex/threads/internal/models"
 )
 
 type PostRepository interface {
-	ListsPosts() ([]m.Post, error)
-	GetPost(id int) (m.Post, error)
-	CreatePost(post m.Post) (m.Post, error)
-	UpdatePost(id int, content string) (m.Post, error)
-	DeletePost(id int) (m.Post, error)
+	ListsPosts(ctx context.Context) ([]m.Post, error)
+	GetPost(ctx context.Context, id int) (m.Post, error)
+	CreatePost(ctx context.Context, post m.Post) (m.Post, error)
+	UpdatePost(ctx context.Context, id int, content string) (m.Post, error)
+	DeletePost(ctx context.Context, id int) (m.Post, error)
 }
 
 type UserRepository interface {
