@@ -17,4 +17,5 @@ CreatedAt time.Time `json:"created_at" db:"created_at"`     timestampz not null 
 UpdatedAt time.Time `json:"updated_at" db:"updated_at"`     timestampz not null default now()
 }
 
-
+авторизация, пагинация, middlewares, фронт нормальный и все будет бомба, docker compose (multi stage build)
+щяс нужно подумать как запускать фронт и где его хранить. 

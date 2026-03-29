@@ -8,8 +8,10 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/venwex/threads/internal/handler"
+	mw "github.com/venwex/threads/internal/middleware"
 	"github.com/venwex/threads/internal/repository"
 	"github.com/venwex/threads/internal/service"
+	ws "github.com/venwex/threads/internal/websockets"
 )
 
 func main() {
@@ -26,17 +28,25 @@ func main() {
 		}
 	}(db)
 
+	hub := ws.NewHub()
+	go hub.Run()
+
 	repo := repository.NewRepository(db)
 	svc := service.NewService(repo)
-	h := handler.NewHandler(svc)
+	h := handler.NewHandler(svc, hub)
 
 	mux := initRoutes(h)
-
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	handlers := mw.Logging(mw.Cors(mux))
+	
+	log.Fatal(http.ListenAndServe(":8080", handlers))
 }
 
 func initRoutes(h *handler.Handler) *http.ServeMux { // default crud
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./index.html")
+	})
 
 	mux.HandleFunc("GET /health", h.Health)
 
@@ -54,6 +64,10 @@ func initRoutes(h *handler.Handler) *http.ServeMux { // default crud
 	mux.HandleFunc("POST /posts", h.Posts.CreatePost)
 	mux.HandleFunc("PATCH /posts/{id}", h.Posts.UpdatePost)
 	mux.HandleFunc("DELETE /posts/{id}", h.Posts.DeletePost)
+
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws.ServeWS(h.Posts.Hub, w, r)
+	})
 
 	return mux
 }

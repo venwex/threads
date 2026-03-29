@@ -2,13 +2,13 @@ package handler
 
 import "net/http"
 
-type AuthoHandler struct {
+type AuthHandler struct {
 }
 
-func NewAuthoHandler() *AuthoHandler {
-	return &AuthoHandler{}
+func NewAuthHandler() *AuthHandler {
+	return &AuthHandler{}
 }
 
-func (h *AuthoHandler) SignUp(w http.ResponseWriter, r *http.Request) {}
+func (h *AuthHandler) SignUp(w http.ResponseWriter, r *http.Request) {}
 
-func (h *AuthoHandler) SignIn(w http.ResponseWriter, r *http.Request) {}
+func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {}
