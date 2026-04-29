@@ -23,6 +23,11 @@ type UserRepository interface {
 	DeleteUser()
 }
 
+type AuthService interface {
+	SignUp(context.Context) (m.User, error)
+	SignIn(ctx context.Context, username string, password string) (m.User, error)
+}
+
 type Repository struct {
 	Post PostRepository
 	User UserRepository

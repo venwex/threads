@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	e "github.com/venwex/threads/internal/errors"
 	m "github.com/venwex/threads/internal/models"
 )
 
@@ -29,7 +28,7 @@ func (repository *PostRepo) ListsPosts(ctx context.Context) ([]m.Post, error) {
 
 func (repository *PostRepo) GetPost(ctx context.Context, id int) (m.Post, error) {
 	if id <= 0 {
-		return m.Post{}, e.ErrInvalidID
+		return m.Post{}, m.ErrInvalidID
 	}
 
 	var post m.Post
@@ -52,7 +51,7 @@ func (repository *PostRepo) CreatePost(ctx context.Context, post m.Post) (m.Post
 
 func (repository *PostRepo) UpdatePost(ctx context.Context, id int, content string) (m.Post, error) { // wrong
 	if len(content) == 0 {
-		return m.Post{}, e.ErrBlankContent
+		return m.Post{}, m.ErrBlankContent
 	}
 
 	var post m.Post
@@ -66,7 +65,7 @@ func (repository *PostRepo) UpdatePost(ctx context.Context, id int, content stri
 
 func (repository *PostRepo) DeletePost(ctx context.Context, id int) (m.Post, error) {
 	if id <= 0 {
-		return m.Post{}, e.ErrInvalidID
+		return m.Post{}, m.ErrInvalidID
 	}
 
 	var post m.Post

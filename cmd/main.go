@@ -4,18 +4,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/venwex/threads/internal/handler"
 	mw "github.com/venwex/threads/internal/middleware"
+	m "github.com/venwex/threads/internal/models"
 	"github.com/venwex/threads/internal/repository"
 	"github.com/venwex/threads/internal/service"
 	ws "github.com/venwex/threads/internal/websockets"
 )
 
 func main() {
-	db, err := initDB()
+	cfg := initCfg() // config for postgres
+
+	db, err := initDB(cfg)
 	if err != nil {
 		log.Fatal("error init db: ", err)
 	}
@@ -37,7 +41,7 @@ func main() {
 
 	mux := initRoutes(h)
 	handlers := mw.Logging(mw.Cors(mux))
-	
+
 	log.Fatal(http.ListenAndServe(":8080", handlers))
 }
 
@@ -72,8 +76,8 @@ func initRoutes(h *handler.Handler) *http.ServeMux { // default crud
 	return mux
 }
 
-func initDB() (*sqlx.DB, error) {
-	dsn := "postgres://postgres:1234@localhost:5431/threads_db?sslmode=disable"
+func initDB(cfg m.PostgresConfig) (*sqlx.DB, error) {
+	dsn := cfg.DSN()
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
@@ -86,4 +90,15 @@ func initDB() (*sqlx.DB, error) {
 	fmt.Println("Successfully connected to postgres")
 
 	return db, nil
+}
+
+func initCfg() m.PostgresConfig {
+	return m.PostgresConfig{
+		Host:     os.Getenv("HOST"),
+		Port:     os.Getenv("PORT"),
+		User:     os.Getenv("USER"),
+		Password: os.Getenv("PASSWORD"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("SSL_MODE"),
+	}
 }
