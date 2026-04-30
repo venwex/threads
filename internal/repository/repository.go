@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	m "github.com/venwex/threads/internal/models"
 )
@@ -23,19 +25,23 @@ type UserRepository interface {
 	DeleteUser()
 }
 
-type AuthService interface {
-	SignUp(context.Context) (m.User, error)
-	SignIn(ctx context.Context, username string, password string) (m.User, error)
+type AuthRepository interface {
+	SignUp(ctx context.Context, username, password, email string) (m.User, error)
+	SaveRefreshToken(ctx context.Context, userID uuid.UUID, refreshHash string, expiresAt time.Time) error
+	GetUser(ctx context.Context, login string) (m.User, error)
+	ExistsByUsernameOrEmail(ctx context.Context, username, email string) (bool, error)
 }
 
 type Repository struct {
 	Post PostRepository
 	User UserRepository
+	Auth AuthRepository
 }
 
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		Post: NewPostRepo(db),
 		User: NewUserRepo(db),
+		Auth: NewAuthRepo(db),
 	}
 }

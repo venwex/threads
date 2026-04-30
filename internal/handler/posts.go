@@ -24,7 +24,7 @@ func (handler *PostHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	resp, err := handler.svc.ListPosts(ctx)
 	if err != nil {
-		log.Println("error listing posts: ", err)
+		log.Printf("error listing posts: %v\n, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -35,7 +35,7 @@ func (handler *PostHandler) ListPosts(w http.ResponseWriter, r *http.Request) {
 func (handler *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	id, err := u.GetID(r)
 	if err != nil {
-		log.Println("error getting post id: ", err)
+		log.Printf("error getting post id: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -43,7 +43,7 @@ func (handler *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	post, err := handler.svc.GetPost(ctx, id)
 	if err != nil {
-		log.Println("error getting post: ", err)
+		log.Printf("error getting post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -54,7 +54,7 @@ func (handler *PostHandler) GetPost(w http.ResponseWriter, r *http.Request) {
 func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	post, err := u.DecodePost(r)
 	if err != nil {
-		log.Println("error decoding post: ", err)
+		log.Printf("error decoding post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, fmt.Errorf("error during decoding (creating) post: %v", err).Error())
 		return
 	}
@@ -62,7 +62,7 @@ func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	post, err = handler.svc.CreatePost(ctx, post)
 	if err != nil {
-		log.Println("error creating post: ", err)
+		log.Printf("error creating post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -76,14 +76,14 @@ func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 func (handler *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	id, err := u.GetID(r)
 	if err != nil {
-		log.Println("error getting post id: ", err)
+		log.Printf("error getting post id: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, fmt.Errorf("error during decoding (update) post: %v", err).Error())
 		return
 	}
 
 	post, err := u.DecodePost(r)
 	if err != nil {
-		log.Println("error decoding post: ", err)
+		log.Printf("error decoding post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -91,7 +91,7 @@ func (handler *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	post, err = handler.svc.UpdatePost(ctx, id, post.Content)
 	if err != nil {
-		log.Println("error updating post: ", err)
+		log.Printf("error updating post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
 	}
@@ -102,7 +102,7 @@ func (handler *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 func (handler *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	id, err := u.GetID(r)
 	if err != nil {
-		log.Println("error getting post id: ", err)
+		log.Printf("error getting post id: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, fmt.Errorf("error during decoding (delete) post: %v", err).Error())
 		return
 	}
@@ -110,7 +110,7 @@ func (handler *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	post, err := handler.svc.DeletePost(ctx, id)
 	if err != nil {
-		log.Println("error deleting post: ", err)
+		log.Printf("error deleting post: %v, path: %v", err, r.URL.Path)
 		u.RenderError(w, http.StatusNotFound, err.Error())
 		return
 	}

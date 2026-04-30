@@ -20,6 +20,7 @@ func NewHandler(svc *service.Service, hub *ws.Hub) *Handler {
 	return &Handler{
 		Posts: NewPostHandler(svc.Posts, hub),
 		Users: NewUsersHandler(svc.Users),
+		Auth:  NewAuthHandler(svc.Auth),
 	}
 }
 

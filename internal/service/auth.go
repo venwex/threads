@@ -12,11 +12,11 @@ import (
 )
 
 type AuthService struct {
-	authRepo     repository.AuthRepo
+	authRepo     repository.AuthRepository
 	tokenManager *auth.TokenManager
 }
 
-func NewAuthService(auth repository.UserRepository, tokenManager *auth.TokenManager) *AuthService {
+func NewAuthService(auth repository.AuthRepository, tokenManager *auth.TokenManager) *AuthService {
 	return &AuthService{
 		authRepo:     auth,
 		tokenManager: tokenManager,
@@ -24,6 +24,18 @@ func NewAuthService(auth repository.UserRepository, tokenManager *auth.TokenMana
 }
 
 func (s *AuthService) SignUp(ctx context.Context, username, password, email string) (m.User, error) {
+	if len(password) < 8 {
+		return m.User{}, fmt.Errorf("password must be at least 8 characters")
+	}
+
+	if len(email) == 0 {
+		return m.User{}, fmt.Errorf("email address is required")
+	}
+
+	if len(username) == 0 {
+		return m.User{}, fmt.Errorf("username is required")
+	}
+
 	exists, err := s.authRepo.ExistsByUsernameOrEmail(ctx, username, email)
 	if err != nil {
 		return m.User{}, fmt.Errorf("error checking if user exists during sign-up: %w", err)
@@ -47,6 +59,14 @@ func (s *AuthService) SignUp(ctx context.Context, username, password, email stri
 }
 
 func (s *AuthService) SignIn(ctx context.Context, login, password string) (m.AuthTokens, error) {
+	if len(password) < 8 {
+		return m.AuthTokens{}, fmt.Errorf("password must be at least 8 characters")
+	}
+
+	if len(login) == 0 {
+		return m.AuthTokens{}, fmt.Errorf("login is required")
+	}
+
 	user, err := s.authRepo.GetUser(ctx, login)
 	if err != nil {
 		if errors.Is(err, m.ErrInvalidCredentials) {

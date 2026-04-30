@@ -8,6 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/venwex/threads/internal/auth"
 	"github.com/venwex/threads/internal/handler"
 	mw "github.com/venwex/threads/internal/middleware"
 	m "github.com/venwex/threads/internal/models"
@@ -35,8 +36,10 @@ func main() {
 	hub := ws.NewHub()
 	go hub.Run()
 
+	tokenManger := auth.NewTokenManager(os.Getenv("JWT_TOKEN_SECRET"), os.Getenv("ISSUER"))
+
 	repo := repository.NewRepository(db)
-	svc := service.NewService(repo)
+	svc := service.NewService(repo, tokenManger)
 	h := handler.NewHandler(svc, hub)
 
 	mux := initRoutes(h)
