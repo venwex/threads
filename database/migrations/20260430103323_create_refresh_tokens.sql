@@ -1,5 +1,4 @@
 -- +goose Up
-SELECT 'up SQL query';
 create table if not exists refresh_tokens (
     id uuid primary key default gen_random_uuid(),
     user_id uuid references users(id) on delete cascade,
@@ -9,5 +8,4 @@ create table if not exists refresh_tokens (
     revoked_at timestamptz
 );
 -- +goose Down
-SELECT 'down SQL query';
 drop table if exists refresh_tokens;

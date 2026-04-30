@@ -61,3 +61,10 @@ auth_middleware
 исправить детали в целом проекте
 
 docker compose
+
+# How to connect to db via docker: 
+docker exec -ti Container_name psql -U Username DB_name
+docker exec -ti threads psql -U postgres threads_db
+
+# How to apply migrations
+goose postgres "user=username password=pass dbname=name sslmode=disable"
