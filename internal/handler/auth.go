@@ -65,10 +65,46 @@ func (h *AuthHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if errors.Is(err, m.ErrUserNotFound) {
+			log.Printf("user %s not found, path: %v", req.Login, r.URL.Path)
+			u.RenderError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		log.Printf("error signing in user %s: %v, path: %v", req.Login, err, r.URL.Path)
 		u.RenderError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	u.WriteJSON(w, http.StatusOK, tokens) // also return tokens
+}
+
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req dto.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("error decoding refresh token request json: %v, path: %v", err, r.URL.Path)
+		u.RenderError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tokens, err := h.auth.RefreshToken(ctx, req.RefreshToken)
+	if err != nil {
+		if errors.Is(err, m.ErrInvalidRefreshToken) {
+			u.RenderError(w, http.StatusUnauthorized, "invalid refresh token")
+			return
+		}
+
+		if errors.Is(err, m.ErrUserNotFound) {
+			u.RenderError(w, http.StatusUnauthorized, "invalid refresh token")
+			return
+		}
+
+		log.Printf("error refreshing token: %v, path: %s", err, r.URL.Path)
+		u.RenderError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	u.WriteJSON(w, http.StatusOK, tokens)
 }

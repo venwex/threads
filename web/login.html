@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Login | Threads</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="auth-page">
+<main class="auth-layout">
+    <section class="auth-panel">
+        <a href="/login.html" class="brand">
+            <span class="brand-logo">◎</span>
+            <span>threads</span>
+        </a>
+
+        <div class="auth-copy">
+            <h1>Welcome back</h1>
+            <p>Log in and continue posting thoughts the internet definitely needed.</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+            <div id="errorBox" class="error-box"></div>
+
+            <label>
+                <span>Email or username</span>
+                <input
+                        type="text"
+                        name="login"
+                        placeholder="venwex"
+                        autocomplete="username"
+                        required
+                />
+            </label>
+
+            <label>
+                <span>Password</span>
+                <input
+                        type="password"
+                        name="password"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                />
+            </label>
+
+            <button type="submit" class="primary-btn">Log in</button>
+        </form>
+
+        <p class="auth-switch">
+            Don't have an account?
+            <a href="/register.html">Create one</a>
+        </p>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth-pages.js"></script>
+</body>
+</html>

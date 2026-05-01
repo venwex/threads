@@ -10,9 +10,10 @@ import (
 )
 
 type Claims struct {
-	ID       uuid.UUID `json:"id"`
+	UserID   uuid.UUID `json:"user_id"`
 	Username string    `json:"username"`
 	Email    string    `json:"email"`
+	Role     string    `json:"role"`
 
 	jwt.RegisteredClaims
 }
@@ -29,13 +30,14 @@ func NewTokenManager(secret string, issuer string) *TokenManager {
 	}
 }
 
-func (m *TokenManager) GenerateAccessToken(userID uuid.UUID, username, email string, ttl time.Duration) (string, error) {
+func (m *TokenManager) GenerateAccessToken(userID uuid.UUID, username, email, role string, ttl time.Duration) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
-		ID:       uuid.New(),
+		UserID:   userID,
 		Username: username,
 		Email:    email,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID.String(),
 			Issuer:    m.issuer,
@@ -67,7 +69,6 @@ func (m *TokenManager) ParseAccessToken(tokenString string) (*Claims, error) {
 		jwt.WithIssuer(m.issuer),
 		jwt.WithExpirationRequired(),
 	)
-
 	if err != nil {
 		return nil, err
 	}

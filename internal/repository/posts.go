@@ -2,8 +2,9 @@ package repository
 
 import (
 	"context"
-	"time"
+	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	m "github.com/venwex/threads/internal/models"
 )
@@ -17,23 +18,48 @@ func NewPostRepo(db *sqlx.DB) *PostRepo {
 }
 
 func (repository *PostRepo) ListsPosts(ctx context.Context) ([]m.Post, error) {
-	var posts []m.Post
+	query := `
+		select 
+			p.post_id,
+			p.author_id,
+			u.username as author_username,
+			p.content,
+			p.created_at,
+			p.updated_at,
+			p.deleted_at
+		from posts p
+		join users u on u.user_id = p.author_id
+		where p.deleted_at is null
+		order by p.created_at desc;
+	`
 
-	if err := repository.db.SelectContext(ctx, &posts, "select * from posts"); err != nil {
+	var posts []m.Post
+	if err := repository.db.SelectContext(ctx, &posts, query); err != nil {
 		return nil, err
 	}
 
 	return posts, nil
 }
 
-func (repository *PostRepo) GetPost(ctx context.Context, id int) (m.Post, error) {
-	if id <= 0 {
+func (repository *PostRepo) GetPost(ctx context.Context, postID uuid.UUID) (m.Post, error) {
+	query := `
+	select 
+	    post_id, 
+	    author_id, 
+	    content, 
+	    created_at, 
+	    updated_at, 
+	    deleted_at 
+	from posts 
+	where (post_id = $1 and deleted_at is null)
+	`
+
+	if postID == uuid.Nil {
 		return m.Post{}, m.ErrInvalidID
 	}
 
 	var post m.Post
-
-	if err := repository.db.GetContext(ctx, &post, "select * from posts where id = $1", id); err != nil {
+	if err := repository.db.GetContext(ctx, &post, query, postID); err != nil {
 		return m.Post{}, err
 	}
 
@@ -41,36 +67,62 @@ func (repository *PostRepo) GetPost(ctx context.Context, id int) (m.Post, error)
 }
 
 func (repository *PostRepo) CreatePost(ctx context.Context, post m.Post) (m.Post, error) {
-	err := repository.db.GetContext(ctx, &post, "insert into posts (author_id, content) values ($1, $2) returning id, author_id, content, created_at, updated_at", post.AuthorID, post.Content)
+	query := `
+		with created_post as (
+			insert into posts (author_id, content)
+			values ($1, $2)
+			returning post_id, author_id, content, created_at, updated_at, deleted_at
+		)
+		select
+			cp.post_id,
+			cp.author_id,
+			u.username as author_username,
+			cp.content,
+			cp.created_at,
+			cp.updated_at,
+			cp.deleted_at
+		from created_post cp
+		join users u on u.user_id = cp.author_id;
+	`
+
+	var createdPost m.Post
+	err := repository.db.GetContext(ctx, &createdPost, query, post.AuthorID, post.Content)
 	if err != nil {
 		return m.Post{}, err
 	}
 
-	return post, nil
+	return createdPost, nil
 }
 
-func (repository *PostRepo) UpdatePost(ctx context.Context, id int, content string) (m.Post, error) { // wrong
-	if len(content) == 0 {
+func (repository *PostRepo) UpdatePost(ctx context.Context, postID uuid.UUID, content string) (m.Post, error) { // wrong
+	if strings.TrimSpace(content) == "" {
 		return m.Post{}, m.ErrBlankContent
 	}
 
+	if postID == uuid.Nil {
+		return m.Post{}, m.ErrInvalidID
+	}
+
+	query := `update posts set content = $1, updated_at = now() where (post_id = $2 and deleted_at is null) returning post_id, author_id, content, created_at, updated_at, deleted_at`
+
 	var post m.Post
 
-	if err := repository.db.GetContext(ctx, &post, "update posts set content = $1, updated_at = $2 where id = $3 returning id, author_id, content, created_at, updated_at", content, time.Now(), id); err != nil {
+	if err := repository.db.GetContext(ctx, &post, query, content, postID); err != nil {
 		return m.Post{}, err
 	}
 
 	return post, nil
 }
 
-func (repository *PostRepo) DeletePost(ctx context.Context, id int) (m.Post, error) {
-	if id <= 0 {
+func (repository *PostRepo) DeletePost(ctx context.Context, postID uuid.UUID) (m.Post, error) {
+	query := `update posts set deleted_at = now() where post_id = $1 returning post_id, author_id, content, created_at, updated_at, deleted_at;`
+
+	if postID == uuid.Nil {
 		return m.Post{}, m.ErrInvalidID
 	}
 
 	var post m.Post
-
-	if err := repository.db.GetContext(ctx, &post, "delete from posts where id = $1 returning id, author_id, content, created_at, updated_at", id); err != nil {
+	if err := repository.db.GetContext(ctx, &post, query, postID); err != nil {
 		return m.Post{}, err
 	}
 

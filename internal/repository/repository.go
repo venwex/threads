@@ -11,10 +11,10 @@ import (
 
 type PostRepository interface {
 	ListsPosts(ctx context.Context) ([]m.Post, error)
-	GetPost(ctx context.Context, id int) (m.Post, error)
+	GetPost(ctx context.Context, id uuid.UUID) (m.Post, error)
 	CreatePost(ctx context.Context, post m.Post) (m.Post, error)
-	UpdatePost(ctx context.Context, id int, content string) (m.Post, error)
-	DeletePost(ctx context.Context, id int) (m.Post, error)
+	UpdatePost(ctx context.Context, id uuid.UUID, content string) (m.Post, error)
+	DeletePost(ctx context.Context, id uuid.UUID) (m.Post, error)
 }
 
 type UserRepository interface {
@@ -28,8 +28,11 @@ type UserRepository interface {
 type AuthRepository interface {
 	SignUp(ctx context.Context, username, password, email string) (m.User, error)
 	SaveRefreshToken(ctx context.Context, userID uuid.UUID, refreshHash string, expiresAt time.Time) error
-	GetUser(ctx context.Context, login string) (m.User, error)
+	GetUserByLogin(ctx context.Context, login string) (m.User, error)
 	ExistsByUsernameOrEmail(ctx context.Context, username, email string) (bool, error)
+	FindRefreshToken(ctx context.Context, refreshHash string) (uuid.UUID, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (*m.User, error)
+	RotateRefreshToken(ctx context.Context, userID uuid.UUID, oldRefreshHash, newRefreshHash string, expiresAt time.Time) error
 }
 
 type Repository struct {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/venwex/threads/internal/auth"
 	"github.com/venwex/threads/internal/handler"
@@ -18,6 +19,10 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("no .env file found")
+	}
+
 	cfg := initCfg() // config for postgres
 
 	db, err := initDB(cfg)
@@ -42,37 +47,43 @@ func main() {
 	svc := service.NewService(repo, tokenManger)
 	h := handler.NewHandler(svc, hub)
 
-	mux := initRoutes(h)
+	mux := initRoutes(h, tokenManger)
 	handlers := mw.Logging(mw.Cors(mux))
 
 	log.Fatal(http.ListenAndServe(":8080", handlers))
 }
 
-func initRoutes(h *handler.Handler) *http.ServeMux { // default crud
+func initRoutes(h *handler.Handler, tokenManager *auth.TokenManager) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./index.html")
-	})
+	authMW := mw.AuthMiddleware(tokenManager)
+
+	protected := func(pattern string, fn http.HandlerFunc) {
+		mux.Handle(pattern, authMW(fn))
+	}
+
+	fileServer := http.FileServer(http.Dir("./web"))
+	mux.Handle("/", fileServer)
 
 	mux.HandleFunc("GET /health", h.Health)
 
 	mux.HandleFunc("POST /sign-up", h.Auth.SignUp)
 	mux.HandleFunc("POST /sign-in", h.Auth.SignIn)
+	mux.HandleFunc("POST /refresh", h.Auth.RefreshToken)
 
-	mux.HandleFunc("GET /users", h.Users.ListUsers)
-	mux.HandleFunc("GET /user/{id}", h.Users.GetUser)
-	mux.HandleFunc("POST /user", h.Users.CreateUser)
-	mux.HandleFunc("PATCH /user/{id}", h.Users.UpdateUser)
-	mux.HandleFunc("DELETE /user/{id}", h.Users.DeleteUser)
+	protected("GET /users", h.Users.ListUsers)
+	protected("GET /users/{id}", h.Users.GetUser)
+	protected("POST /users", h.Users.CreateUser)
+	protected("PATCH /users/{id}", h.Users.UpdateUser)
+	protected("DELETE /users/{id}", h.Users.DeleteUser)
 
-	mux.HandleFunc("GET /posts", h.Posts.ListPosts)
-	mux.HandleFunc("GET /posts/{id}", h.Posts.GetPost)
-	mux.HandleFunc("POST /posts", h.Posts.CreatePost)
-	mux.HandleFunc("PATCH /posts/{id}", h.Posts.UpdatePost)
-	mux.HandleFunc("DELETE /posts/{id}", h.Posts.DeletePost)
+	protected("GET /posts", h.Posts.ListPosts)
+	protected("GET /posts/{id}", h.Posts.GetPost)
+	protected("POST /posts", h.Posts.CreatePost)
+	protected("PATCH /posts/{id}", h.Posts.UpdatePost)
+	protected("DELETE /posts/{id}", h.Posts.DeletePost)
 
-	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	protected("GET /ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWS(h.Posts.Hub, w, r)
 	})
 
@@ -105,3 +116,8 @@ func initCfg() m.PostgresConfig {
 		SSLMode:  os.Getenv("SSL_MODE"),
 	}
 }
+
+//{
+//"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTU3YmM1OWItZmYxOC00ZmNlLWJjYjgtN2Y4ODJiZWJmNzZjIiwidXNlcm5hbWUiOiJhIiwiZW1haWwiOiJhQGdtYWlsLmNvbSIsInJvbGUiOiJ1c2VyIiwiaXNzIjoidmVud2V4Iiwic3ViIjoiOTU3YmM1OWItZmYxOC00ZmNlLWJjYjgtN2Y4ODJiZWJmNzZjIiwiZXhwIjoxNzc3NjUxOTU5LCJpYXQiOjE3Nzc2NTEwNTl9.cyjSiizrlBAJ-JgDqAGIF7supoQ9BriyIlT1Rrgb0cw",
+//"refresh_token": "eM0q-PWAMyV67OAPHcUasah2YjfnWaNJXBQzDil75MY"
+//}

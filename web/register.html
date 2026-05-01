@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Register | Threads</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="auth-page">
+<main class="auth-layout">
+    <section class="auth-panel">
+        <a href="/login.html" class="brand">
+            <span class="brand-logo">◎</span>
+            <span>threads</span>
+        </a>
+
+        <div class="auth-copy">
+            <h1>Create account</h1>
+            <p>Join the feed. Add one more voice to the grand notification machine.</p>
+        </div>
+
+        <form id="registerForm" class="auth-form">
+            <div id="errorBox" class="error-box"></div>
+
+            <label>
+                <span>Username</span>
+                <input
+                        type="text"
+                        name="username"
+                        placeholder="venwex"
+                        autocomplete="username"
+                        required
+                />
+            </label>
+
+            <label>
+                <span>Email</span>
+                <input
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                />
+            </label>
+
+            <label>
+                <span>Password</span>
+                <input
+                        type="password"
+                        name="password"
+                        placeholder="••••••••"
+                        autocomplete="new-password"
+                        required
+                />
+            </label>
+
+            <button type="submit" class="primary-btn">Create account</button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="/login.html">Log in</a>
+        </p>
+    </section>
+</main>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth-pages.js"></script>
+</body>
+</html>

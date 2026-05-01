@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/venwex/threads/internal/auth"
 	m "github.com/venwex/threads/internal/models"
 	"github.com/venwex/threads/internal/repository"
@@ -67,18 +68,23 @@ func (s *AuthService) SignIn(ctx context.Context, login, password string) (m.Aut
 		return m.AuthTokens{}, fmt.Errorf("login is required")
 	}
 
-	user, err := s.authRepo.GetUser(ctx, login)
+	user, err := s.authRepo.GetUserByLogin(ctx, login)
 	if err != nil {
 		if errors.Is(err, m.ErrInvalidCredentials) {
 			return m.AuthTokens{}, m.ErrInvalidCredentials
 		}
+
+		if errors.Is(err, m.ErrUserNotFound) {
+			return m.AuthTokens{}, m.ErrUserNotFound
+		}
 	}
 
+	fmt.Println(user.Password, "password")
 	if !auth.CheckPasswordHash(password, user.Password) { // user.Password is its password_hash
-		return m.AuthTokens{}, m.ErrInvalidCredentials
+		return m.AuthTokens{}, fmt.Errorf("invalid password")
 	}
 
-	accessToken, err := s.tokenManager.GenerateAccessToken(user.ID, user.Username, user.Email, 30*time.Minute)
+	accessToken, err := s.tokenManager.GenerateAccessToken(user.UserID, user.Username, user.Email, "user", 15*time.Minute)
 	if err != nil {
 		return m.AuthTokens{}, fmt.Errorf("error generating access token for user %s: %w", user.Username, err)
 	}
@@ -90,16 +96,61 @@ func (s *AuthService) SignIn(ctx context.Context, login, password string) (m.Aut
 
 	err = s.authRepo.SaveRefreshToken(
 		ctx,
-		user.ID,
+		user.UserID,
 		refreshHash,
 		time.Now().Add(30*24*time.Hour),
 	)
 	if err != nil {
-		return m.AuthTokens{}, fmt.Errorf("save refresh token: %w", err)
+		return m.AuthTokens{}, fmt.Errorf("error saving refresh token: %w", err)
 	}
 
 	return m.AuthTokens{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+	}, nil
+}
+
+func (s *AuthService) RefreshToken(ctx context.Context, plainRefreshToken string) (m.AuthTokens, error) {
+	if len(plainRefreshToken) == 0 { // check if refresh token is empty
+		return m.AuthTokens{}, m.ErrInvalidRefreshToken
+	}
+
+	oldRefreshHash := auth.HashRefreshToken(plainRefreshToken) // hash given refresh token
+
+	userID, err := s.authRepo.FindRefreshToken(ctx, oldRefreshHash) // validate refresh token
+	if err != nil {
+		return m.AuthTokens{}, fmt.Errorf("error finding refresh token hash: %w", err)
+	}
+	if userID == uuid.Nil {
+		return m.AuthTokens{}, m.ErrInvalidRefreshToken
+	}
+
+	user, err := s.authRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return m.AuthTokens{}, m.ErrUserNotFound
+	}
+
+	accessToken, err := s.tokenManager.GenerateAccessToken(user.UserID, user.Username, user.Email, user.Role, 15*time.Minute)
+	if err != nil {
+		return m.AuthTokens{}, fmt.Errorf("error generating access token for user %s: %w", user.Username, err)
+	}
+
+	newRefreshToken, newRefreshHash, err := auth.GenerateRefreshToken()
+	if err != nil {
+		return m.AuthTokens{}, fmt.Errorf("error generating refresh token for user %s: %w", user.Username, err)
+	}
+
+	err = s.authRepo.RotateRefreshToken(ctx, userID, oldRefreshHash, newRefreshHash, time.Now().Add(30*24*time.Hour))
+	if err != nil {
+		if errors.Is(err, m.ErrInvalidRefreshToken) {
+			return m.AuthTokens{}, m.ErrInvalidRefreshToken
+		}
+
+		return m.AuthTokens{}, fmt.Errorf("error rotating refresh token for user %s: %w", user.Username, err)
+	}
+
+	return m.AuthTokens{
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }

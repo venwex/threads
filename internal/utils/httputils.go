@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 
+	"github.com/google/uuid"
 	m "github.com/venwex/threads/internal/models"
 )
 
@@ -29,12 +29,12 @@ func RenderError(w http.ResponseWriter, status int, text string) {
 	}
 }
 
-func GetID(r *http.Request) (int, error) {
+func GetID(r *http.Request) (uuid.UUID, error) {
 	idStr := r.PathValue("id")
 
-	id, err := strconv.Atoi(idStr)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
-		return 0, err
+		return uuid.Nil, err
 	}
 
 	return id, nil
