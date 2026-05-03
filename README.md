@@ -1,4 +1,6 @@
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/706e9723-c83e-437b-baa4-da13faf4a16b" /># threads
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/706e9723-c83e-437b-baa4-da13faf4a16b" />
+
+# threads
 
 A minimal Threads-like social feed built with Go, PostgreSQL, JWT authentication and WebSocket-based realtime updates.
 
