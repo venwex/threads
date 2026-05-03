@@ -1,12 +1,10 @@
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/706e9723-c83e-437b-baa4-da13faf4a16b" />
 
-# threads
+# Threads
 
 A minimal Threads-like social feed built with Go, PostgreSQL, JWT authentication and WebSocket-based realtime updates.
 
 The project is focused on clean backend architecture, authentication flow, database migrations, soft deletes, and realtime post broadcasting without frontend frameworks or bundlers.
-
-![Threads UI](<img width="1920" height="1080" alt="photo_5456405523646322449_w" src="https://github.com/user-attachments/assets/06207eff-11cf-4dcb-8025-44608ea2e8b7" />)
 
 ---
 
