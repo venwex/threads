@@ -1,85 +1,130 @@
-entities: users, posts and comments
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/706e9723-c83e-437b-baa4-da13faf4a16b" /># threads
 
-type User struct {
-ID        int       `json:"id" db:"id"`                    serial primary key
-Username  string    `json:"username" db:"username"`        varchar(50) not null unique
-Email     string    `json:"email" db:"email"`              varchar(50) not null unique
-PasswordHash  string    `json:"-" db:"password_hash"`      varchar(255) not null
-CreatedAt time.Time `json:"createdAt" db:"created_at"`     timestampz not null default now()
-UpdatedAt time.Time `json:"updatedAt" db:"updated_at"`     timestampz not null default now()
-}
+A minimal Threads-like social feed built with Go, PostgreSQL, JWT authentication and WebSocket-based realtime updates.
 
-type Post struct {
-ID        int       `json:"id" db:"id"`                     serial primary key
-AuthorID  int       `json:"author_id" db:"author_id"`       references users(id)
-Content   string    `json:"content" db:"content"`           Text not null
-CreatedAt time.Time `json:"created_at" db:"created_at"`     timestampz not null default now()
-UpdatedAt time.Time `json:"updated_at" db:"updated_at"`     timestampz not null default now()
-}
+The project is focused on clean backend architecture, authentication flow, database migrations, soft deletes, and realtime post broadcasting without frontend frameworks or bundlers.
 
-авторизация, пагинация, фронт нормальный и все будет бомба, docker compose (multi stage build)
-щяс нужно подумать как запускать фронт и где его хранить. 
-configuration и брать значения из переменных окружения 
+![Threads UI](<img width="1920" height="1080" alt="photo_5456405523646322449_w" src="https://github.com/user-attachments/assets/06207eff-11cf-4dcb-8025-44608ea2e8b7" />)
 
-1. Authentication & Authorization:
-   a. User registration and login using JWT-based authentication
-   b. Secure token generation and verification
-   c. Role‐based access control (e.g., admin, regular user)
-   d. Proper password hashing and validation
+---
 
-2. CRUD operations:
-   a. At least  three major entities/tables (with meaningful relationships:
-   one‐to‐many, many‐to‐many, etc.)
+## Overview
 
-3. Database & Migrations
-   a. Use golang-migrate
-   b. Schema with foreign keys and indexes
-   c. Seed data where needed
+`threads` is a small social feed application where users can register, sign in, create posts, and receive new posts in realtime through WebSocket connections.
 
-4. Concurrency & Context
-   a. At least one background worker (goroutines, channels)
-   b. Context propagation, cancellation, graceful shutdown
+The backend is written in Go using the standard `net/http` package with a layered architecture:
 
-5. API Documentation
-   a. Basic documentation of endpoints (README with endpoints or
-   Swagger/OpenAPI spec)
+- handlers
+- services
+- repositories
+- middleware
+- PostgreSQL storage
+- JWT authentication
+- WebSocket hub
 
-6. Testing
-   a. Unit tests with testing package
-   b. Coverage for critical endpoints
+The frontend is a lightweight static client served directly by the Go server.
 
-7. Code Organization & Best Practices
-Containerization with Docker
+No React. No npm. No bundler. Humanity survives another day.
 
+---
 
-создать таблицу refresh_tokens в дб - обновил
+## Features
 
-проверить эти 2 ендпоинта через постман:
-    mux.HandleFunc("POST /sign-up", h.Auth.SignUp)
-    mux.HandleFunc("POST /sign-in", h.Auth.SignIn)
-/auth/refresh - закончить ендпоинт, добавить логику обновления access_token через refresh_token
-role-based access control, то есть только авторы собственных постов могут удалять посты. (users, admin)
-auth_middleware
-исправить в auth
+### Authentication
 
-исправить детали в целом проекте
-m.User should be returned as a pointer like *m.User
+- User registration
+- User login
+- Password hashing with bcrypt
+- JWT access tokens
+- Refresh token generation and rotation
+- Refresh tokens stored as SHA-256 hashes
+- Protected routes using authentication middleware
+- User claims stored in request context
 
-docker compose and containerization
+### Posts
 
-# How to connect to db via docker: 
-docker exec -ti Container_name psql -U Username DB_name
-docker exec -ti threads psql -U postgres threads_db
+- Create posts
+- Get posts feed
+- Update posts
+- Delete posts
+- Soft delete support with `deleted_at`
+- Author information included in feed responses
 
-# How to apply migrations
-goose postgres "user=username password=pass dbname=name sslmode=disable"
-goose postgres "user=postgres password=1234 dbname_threads_db sslmode=disable" up
+### Realtime
 
-исправить детали в целом проекте
-m.User should be returned as a pointer like *m.User
+- WebSocket endpoint for authenticated users
+- Access token passed through query parameter
+- Connected clients receive newly created posts instantly
+- Hub-based client registration, unregistration, and broadcasting
 
-работа с ролями
+### Database
 
-исправить так чтобы только авторы собственных постов могли изменять собственные посты
+- PostgreSQL
+- UUID primary keys
+- Goose migrations
+- Foreign key relationships between users and posts
+- Soft delete fields
+- Refresh token persistence
 
-docker compose and containerization
+### Frontend
+
+- Static HTML/CSS/JavaScript client
+- Login page
+- Registration page
+- Feed page
+- Dark Threads-like UI
+- Access token stored on the client
+- WebSocket connection after login
+
+---
+
+## Tech Stack
+
+### Backend
+
+- Go
+- net/http
+- PostgreSQL
+- sqlx
+- goose
+- bcrypt
+- JWT
+- gorilla/websocket
+- Docker / Docker Compose
+
+### Frontend
+
+- HTML
+- CSS
+- Vanilla JavaScript
+
+---
+
+## Project Structure
+
+```text
+threads/
+├── cmd/
+│   └── app/
+│       └── main.go
+├── database/
+│   └── migrations/
+├── internal/
+│   ├── auth/
+│   ├── config/
+│   ├── handler/
+│   ├── middleware/
+│   ├── models/
+│   ├── repository/
+│   ├── service/
+│   ├── transport/
+│   └── websocket/
+├── web/
+│   ├── index.html
+│   ├── app.html
+│   ├── css/
+│   └── js/
+├── docker-compose.yml
+├── Dockerfile
+├── go.mod
+└── README.md
